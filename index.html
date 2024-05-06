@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>API Test</title>
+</script>
+
+
+
+  <style>
+
+    td, th {border: solid 1px black;}
+    .match {background: MediumSeaGreen;}
+    .no-match {background: Tomato;}
+    .resultsMessage {font-weight: bold; border: 5px solid red;}
+  </style>
+
+</head>
+
+<body  class="mdc-typography">
+<h1 class="">Test API endpoints</h1>
+<p>This page will make API calls to some of the endpoints required for project 2.  
+  <ul id="endpoints">
+
+  </ul>Test other endpoints in Postman.</p>
+
+<p>Enter <em>your</em> replit base URL (something that looks like <pre>https://99999-a495-448c-86b5-e839cb4f6df2-00-3uralf52sepyw.janeway.replit.dev</pre> - NO TRAILING SLASH) in the box below.<br><input size=100 type="text" name="domain" id="domain" placeholder="Enter your replit base URL"></input>
+<br><br>
+<button id="runTest">Run Tests</button>  <button id="runColorsTest">Run Colors Tests</button></p>
+
+  <div id="results">
+
+  </div>
+
+
+
+  
+  <script>
+    var domain;
+    var endpointPrefix = '/api/v1/'
+    var endpoints = [
+      'films/7',
+      'films/7000',
+      'films/7/actors',
+      'films?query=gold',
+      'films?query=computer',
+      'actors/75',
+      'customers/82',
+      'stores/1',
+      'staff/2',
+      'inventory/500',
+      'customers/54/detail',
+      'inventory-in-stock/100/1',
+      'movies?genre=Drama',
+    ]
+
+    // var oneColorId;
+
+    
+    endpoints.forEach(endpoint => {
+      let ul = document.createElement("ul");
+      ul.innerText = endpoint;
+      document.getElementById("endpoints").appendChild(ul);
+    })
+    
+
+function runColorsTests() {
+  let domain = document.getElementById("domain").value;
+  if (domain.slice(-1) == "/") {
+    domain = domain.substring(0, domain.length - 1);
+  }
+  let url = domain + endpointPrefix + "colors";
+
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        console.log("getting all colors")
+        let oneColorId = "0";
+        if (data.length > 0) {
+          oneColorId = data[0]["_id"] || "99";
+        }
+        
+
+        let div = document.createElement("div");
+        div.className = data.match ? "match" : "no-match";
+        div.innerText = JSON.stringify(data);
+        results.appendChild(div);
+        console.log("first id",oneColorId)
+        return oneColorId;
+      })
+
+    .then ((oneColorId) => {
+       url = domain + endpointPrefix + "colors/" + oneColorId;
+      fetch(url)
+      .then(response => response.json())
+      .then(data => {
+
+          let div = document.createElement("div");
+
+          div.innerText = JSON.stringify(data);
+          results.appendChild(div);
+        })
+      .then (() => {
+        url = domain + endpointPrefix + "colors";
+        fetch(url, 
+              {
+                method: "POST", // or 'PUT',
+                headers: {
+                  "Content-Type": "application/json",
+                  // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: JSON.stringify({"color": "Hayes"})
+              })
+        .then(response => response.json())
+        .then(data => {
+            let oneColorId = data["insertedId"];
+            console.log("added color Hayes",oneColorId)
+            
+            let div = document.createElement("div");
+
+            div.innerText = JSON.stringify(data);
+            results.appendChild(div);
+            return oneColorId;
+          })
+        .then ((oneColorId) => {
+        url = domain + endpointPrefix + "colors/" + oneColorId;
+        console.log("deleting",oneColorId)
+        fetch(url, 
+              {
+                method: "DELETE", // or 'PUT',
+              }
+        )
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            let div = document.createElement("div");
+      
+            div.innerText = JSON.stringify(data);
+            results.appendChild(div);
+          })
+
+    .then( () => {
+    let url = domain + endpointPrefix + "colors";
+
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        oneColorId = data[0]["_id"];
+
+          let div = document.createElement("div");
+          div.className = data.match ? "match" : "no-match";
+          div.innerText = JSON.stringify(data);
+          results.appendChild(div);
+        })
+
+    
+    })
+  
+  })
+            })
+    })
+}
+  
+
+    document.getElementById("runColorsTest").addEventListener("click", runColorsTests);
+    
+    
+    document.getElementById("runTest").addEventListener("click", () => {
+      if (results.hasChildNodes()) {
+        results.childNodes.forEach(node => node.remove())
+      }
+      
+      var counter = 0;
+      domain = document.getElementById("domain").value;
+      if (domain.slice(-1) == "/") {
+        domain = domain.substring(0, domain.length - 1);
+      }
+      
+      for (let i=0; i<endpoints.length; i++) {
+        let endpoint = endpoints[i];
+        let url = domain + endpointPrefix + endpoint;
+        let expected = expectedResults[i]
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            
+            // console.log(i, JSON.stringify(expected), JSON.stringify(data));
+            let div = document.createElement("div");
+            let h2 = document.createElement("h2");
+            h2.innerText = "Testing endpoint: " + endpoint;
+            div.appendChild(h2);
+            let pre = document.createElement("pre");
+            pre.innerText = JSON.stringify(data);
+            div.appendChild(pre);
+            results.appendChild(div);
+            
+            var match = (JSON.stringify(data) == JSON.stringify(expected) )
+            let p = document.createElement("p");
+            p.innerText = match ? "Match" : "No Match";
+            p.className = match ? "match" : "no-match";
+            results.appendChild(p);
+            
+          })
+        counter++;
+      }  
+    })
+
+
+
+    const expectedResults = [
+       [{"film_id":7,"title":"AIRPLANE SIERRA","description":"A Touching Saga of a Hunter And a Butler who must Discover a Butler in A Jet Boat","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":6,"rental_rate":4.99,"length":62,"replacement_cost":28.99,"rating":"PG-13","special_features":"Trailers,Deleted Scenes","last_update":"2006-02-15T05:03:42.000Z"}],
+      [],
+      [{"actor_id":99,"first_name":"JIM","last_name":"MOSTEL","last_update":"2006-02-15T04:34:33.000Z"},{"actor_id":133,"first_name":"RICHARD","last_name":"PENN","last_update":"2006-02-15T04:34:33.000Z"},{"actor_id":162,"first_name":"OPRAH","last_name":"KILMER","last_update":"2006-02-15T04:34:33.000Z"},{"actor_id":170,"first_name":"MENA","last_name":"HOPPER","last_update":"2006-02-15T04:34:33.000Z"},{"actor_id":185,"first_name":"MICHAEL","last_name":"BOLGER","last_update":"2006-02-15T04:34:33.000Z"}],
+      [{"film_id":2,"title":"ACE GOLDFINGER","description":"A Astounding Epistle of a Database Administrator And a Explorer who must Find a Car in Ancient China","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":3,"rental_rate":4.99,"length":48,"replacement_cost":12.99,"rating":"G","special_features":"Trailers,Deleted Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":95,"title":"BREAKFAST GOLDFINGER","description":"A Beautiful Reflection of a Student And a Student who must Fight a Moose in Berlin","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":5,"rental_rate":4.99,"length":123,"replacement_cost":18.99,"rating":"G","special_features":"Trailers,Commentaries,Deleted Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":365,"title":"GOLD RIVER","description":"A Taut Documentary of a Database Administrator And a Waitress who must Reach a Mad Scientist in A Baloon Factory","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":4,"rental_rate":4.99,"length":154,"replacement_cost":21.99,"rating":"R","special_features":"Trailers,Commentaries,Deleted Scenes,Behind the Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":366,"title":"GOLDFINGER SENSIBILITY","description":"A Insightful Drama of a Mad Scientist And a Hunter who must Defeat a Pastry Chef in New Orleans","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":3,"rental_rate":0.99,"length":93,"replacement_cost":29.99,"rating":"G","special_features":"Trailers,Commentaries,Behind the Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":367,"title":"GOLDMINE TYCOON","description":"A Brilliant Epistle of a Composer And a Frisbee who must Conquer a Husband in The Outback","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":6,"rental_rate":0.99,"length":153,"replacement_cost":20.99,"rating":"R","special_features":"Trailers,Behind the Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":644,"title":"OSCAR GOLD","description":"A Insightful Tale of a Database Administrator And a Dog who must Face a Madman in Soviet Georgia","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":7,"rental_rate":2.99,"length":115,"replacement_cost":29.99,"rating":"PG","special_features":"Behind the Scenes","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":798,"title":"SILVERADO GOLDFINGER","description":"A Stunning Epistle of a Sumo Wrestler And a Man who must Challenge a Waitress in Ancient India","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":4,"rental_rate":4.99,"length":74,"replacement_cost":11.99,"rating":"PG","special_features":"Trailers,Commentaries","last_update":"2006-02-15T05:03:42.000Z"},{"film_id":870,"title":"SWARM GOLD","description":"A Insightful Panorama of a Crocodile And a Boat who must Conquer a Sumo Wrestler in A MySQL Convention","release_year":2006,"language_id":1,"original_language_id":null,"rental_duration":4,"rental_rate":0.99,"length":123,"replacement_cost":12.99,"rating":"PG-13","special_features":"Trailers,Commentaries","last_update":"2006-02-15T05:03:42.000Z"}],
+    [],
+      [{"actor_id":75,"first_name":"BURT","last_name":"POSEY","last_update":"2006-02-15T04:34:33.000Z"}],
+      [{"customer_id":82,"store_id":1,"first_name":"KATHRYN","last_name":"COLEMAN","email":"KATHRYN.COLEMAN@sakilacustomer.org","address_id":86,"active":1,"create_date":"2006-02-14T22:04:36.000Z","last_update":"2006-02-15T04:57:20.000Z"}],
+      [{"store_id":1,"manager_staff_id":1,"address_id":1,"last_update":"2006-02-15T04:57:12.000Z"}],
+      [{"staff_id":2,"first_name":"Jon","last_name":"Stephens","address_id":4,"picture":null,"email":"Jon.Stephens@sakilastaff.com","store_id":2,"active":1,"username":"Jon","password":null,"last_update":"2006-02-15T03:57:16.000Z"}],
+      [{"inventory_id":500,"film_id":111,"store_id":2,"last_update":"2006-02-15T05:09:17.000Z"}],
+      [{"ID":54,"name":"TERESA ROGERS","address":"1964 Allappuzha (Alleppey) Street","zip code":"48980","phone":"920811325222","city":"Iwakuni","country":"Japan","notes":"active","SID":1}],
+      [{"inventory_id":451},{"inventory_id":452},{"inventory_id":453},{"inventory_id":454}],
+     
+      [{"_id":"573a1390f29313caabcd446f","plot":"A greedy tycoon decides, on a whim, to corner the world market in wheat. This doubles the price of bread, forcing the grain's producers into charity lines and further into poverty. The film...","genres":["Short","Drama"],"runtime":14,"cast":["Frank Powell","Grace Henderson","James Kirkwood","Linda Arvidson"],"num_mflix_comments":1,"title":"A Corner in Wheat","fullplot":"A greedy tycoon decides, on a whim, to corner the world market in wheat. This doubles the price of bread, forcing the grain's producers into charity lines and further into poverty. The film continues to contrast the ironic differences between the lives of those who work to grow the wheat and the life of the man who dabbles in its sale for profit.","languages":["English"],"released":"1909-12-13T00:00:00.000Z","directors":["D.W. Griffith"],"rated":"G","awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-08-13 00:46:30.660000000","year":1909,"imdb":{"rating":6.6,"votes":1375,"id":832},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":3.6,"numReviews":109,"meter":73},"lastUpdated":"2015-05-11T18:36:53.000Z"}},{"_id":"573a1390f29313caabcd4eaf","plot":"A woman, with the aid of her police officer sweetheart, endeavors to uncover the prostitution ring that has kidnapped her sister, and the philanthropist who secretly runs it.","genres":["Crime","Drama"],"runtime":88,"cast":["Jane Gail","Ethel Grandin","William H. Turner","Matt Moore"],"num_mflix_comments":1,"poster":"https://m.media-amazon.com/images/M/MV5BYzk0YWQzMGYtYTM5MC00NjM2LWE5YzYtMjgyNDVhZDg1N2YzXkEyXkFqcGdeQXVyMzE0MjY5ODA@._V1_SY1000_SX677_AL_.jpg","title":"Traffic in Souls","lastupdated":"2015-09-15 02:07:14.247000000","languages":["English"],"released":"1913-11-24T00:00:00.000Z","directors":["George Loane Tucker"],"rated":"TV-PG","awards":{"wins":1,"nominations":0,"text":"1 win."},"year":1913,"imdb":{"rating":6,"votes":371,"id":3471},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":3,"numReviews":85,"meter":57},"dvd":"2008-08-26T00:00:00.000Z","lastUpdated":"2015-08-10T18:33:55.000Z"}},{"_id":"573a1390f29313caabcd516c","plot":"Original advertising for the film describes it as a drama of primitive life on the shores of the North Pacific...","genres":["Drama","History"],"runtime":65,"cast":["Stanley Hunt","Sarah Constance Smith Hunt","Mrs. George Walkus","Paddy 'Malid"],"num_mflix_comments":1,"poster":"https://m.media-amazon.com/images/M/MV5BMjE3MjAyNzM5NV5BMl5BanBnXkFtZTgwMjA5OTg5NjE@._V1_SY1000_SX677_AL_.jpg","title":"In the Land of the Head Hunters","lastupdated":"2015-09-16 12:11:37.770000000","languages":["English"],"released":"1914-12-07T00:00:00.000Z","directors":["Edward S. Curtis"],"writers":["Edward S. Curtis (story)"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"year":1914,"imdb":{"rating":5.8,"votes":223,"id":4150},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":2.7,"numReviews":64,"meter":18},"dvd":"2000-08-15T00:00:00.000Z","website":"http://www.milestonefilms.com/","production":"World Film Corporation","lastUpdated":"2015-08-18T19:21:12.000Z"}},{"_id":"573a1390f29313caabcd56df","plot":"An immigrant leaves his sweetheart in Italy to find a better life across the sea in the grimy slums of New York. They are eventually reunited and marry. But life in New York is hard and ...","genres":["Drama"],"runtime":78,"rated":"PASSED","cast":["George Beban","Clara Williams","J. Frank Burke","Leo Willis"],"title":"The Italian","fullplot":"An immigrant leaves his sweetheart in Italy to find a better life across the sea in the grimy slums of New York. They are eventually reunited and marry. But life in New York is hard and tragedy tarnishes their dream of a better life in the new world.","languages":["English"],"released":"1915-01-01T00:00:00.000Z","directors":["Reginald Barker"],"writers":["Thomas H. Ince (story)","C. Gardner Sullivan (story)"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-07-27 00:07:43.230000000","year":1915,"imdb":{"rating":6.4,"votes":175,"id":5557},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":4,"numReviews":204,"meter":60},"dvd":"2008-08-26T00:00:00.000Z","lastUpdated":"2015-07-24T19:30:02.000Z"},"num_mflix_comments":0},{"_id":"573a1390f29313caabcd587d","plot":"At 10 years old, Owens becomes a ragged orphan when his sainted mother dies. The Conways, who are next door neighbors, take Owen in, but the constant drinking by Jim soon puts Owen on the ...","genres":["Biography","Crime","Drama"],"runtime":72,"rated":"PASSED","cast":["John McCann","James A. Marcus","Maggie Weston","Harry McCoy"],"num_mflix_comments":1,"poster":"https://m.media-amazon.com/images/M/MV5BNDkxZGU4NmMtODJlNy00YzA2LTg4ZGMtNGFlNzAyNzcxOTM1XkEyXkFqcGdeQXVyOTM3MjcyMjI@._V1_SY1000_SX677_AL_.jpg","title":"Regeneration","fullplot":"At 10 years old, Owens becomes a ragged orphan when his sainted mother dies. The Conways, who are next door neighbors, take Owen in, but the constant drinking by Jim soon puts Owen on the street. By 17, Owen learns that might is right. By 25, Owen is the leader of his own gang who spend most of their time gambling and drinking. But Marie comes into the gangster area of town and everything changes for Owen as he falls for Marie. But he cannot tell her so, so he comes to her settlement to find education and inspiration. But soon, his old way of life will rise to confront him again.","languages":["English"],"released":"1915-09-13T00:00:00.000Z","directors":["Raoul Walsh"],"writers":["Owen Frawley Kildare (book)","Raoul Walsh (adapted from the book: \"My Mamie Rose\")","Carl Harbaugh (adapted from the book: \"My Mamie Rose\")"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-08-14 01:28:18.957000000","year":1915,"imdb":{"rating":6.8,"votes":626,"id":5960},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":3.4,"numReviews":395,"meter":70},"dvd":"2001-11-27T00:00:00.000Z","critic":{"rating":9.2,"numReviews":5,"meter":100},"lastUpdated":"2015-09-17T17:22:42.000Z","rotten":0,"production":"Fox Film Corporation","fresh":5}},{"_id":"573a1390f29313caabcd5a93","plot":"Christ takes on the form of a pacifist count to end a senseless war.","genres":["Drama"],"runtime":78,"cast":["Howard C. Hickman","Enid Markey","Lola May","Kate Bruce"],"num_mflix_comments":0,"poster":"https://m.media-amazon.com/images/M/MV5BMjAwNTIxMjE5N15BMl5BanBnXkFtZTgwODc1Mjg1MzE@._V1_SY1000_SX677_AL_.jpg","title":"Civilization","fullplot":"Allegorical film about peace. A king starts a war, many of the women are against it, people are pressed into service. A count has constructed a submarine and gets the order to sink an ocean liner, that is also carrying - supposedly - ammunition for the enemy. The count refuses to fire the torpedos, and sinks the submarine. He survives, but in a limbo between death and life where he meets Jesus, who takes him over to preach peace. Naturally the king arrests him and sentences him to death for treason, but then Jesus shows him the real face of war.","countries":["USA"],"released":"1916-06-02T00:00:00.000Z","directors":["Reginald Barker","Thomas H. Ince","Raymond B. West","Walter Edwards","David Hartford","Jay Hunt","J. Parker Read Jr."],"writers":["C. Gardner Sullivan"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-04-30 02:13:27.863000000","year":1916,"imdb":{"rating":6.3,"votes":162,"id":6517},"type":"movie","tomatoes":{"viewer":{"rating":0,"numReviews":7},"lastUpdated":"2015-08-07T18:42:35.000Z"}},{"_id":"573a1390f29313caabcd5ea4","plot":"A District Attorney's outspoken stand on abortion gets him in trouble with the local community.","genres":["Drama"],"runtime":62,"rated":"APPROVED","cast":["Tyrone Power Sr.","Helen Riaume","Marie Walcamp","Cora Drew"],"title":"Where Are My Children?","fullplot":"While prosecuting a physician for the death of a client after an abortion, the district attorney discovers that his wife helped her society friends and the daughter of her maid obtain and pay for abortions from the physician (and was perhaps herself also a client.)","languages":["English"],"released":"1916-05-01T00:00:00.000Z","directors":["Phillips Smalley","Lois Weber"],"writers":["Lucy Payton (from the story by)","Franklin Hall (from the story by)","Lois Weber","Phillips Smalley"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-09-07 00:51:32.560000000","year":1916,"imdb":{"rating":5.9,"votes":247,"id":7558},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":3.1,"numReviews":34,"meter":50},"production":"MCA/Universal Pictures","lastUpdated":"2015-08-06T19:49:17.000Z"},"num_mflix_comments":0},{"_id":"573a1390f29313caabcd6223","plot":"Gwen's family is rich, but her parents ignore her and most of the servants push her around, so she is lonely and unhappy. Her father is concerned only with making money, and her mother ...","genres":["Comedy","Drama","Family"],"runtime":65,"cast":["Mary Pickford","Madlaine Traverse","Charles Wellesley","Gladys Fairbanks"],"title":"The Poor Little Rich Girl","fullplot":"Gwen's family is rich, but her parents ignore her and most of the servants push her around, so she is lonely and unhappy. Her father is concerned only with making money, and her mother cares only about her social position. But one day a servant's irresponsibility creates a crisis that causes everyone to rethink what is important to them.","languages":["English"],"released":"1917-03-05T00:00:00.000Z","directors":["Maurice Tourneur"],"writers":["Eleanor Gates (play)","Frances Marion (scenario)"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-07-27 00:11:31.387000000","year":1917,"imdb":{"rating":6.9,"votes":884,"id":8443},"countries":["USA"],"type":"movie","tomatoes":{"viewer":{"rating":3.9,"numReviews":137,"meter":77},"production":"Artcraft","lastUpdated":"2015-08-21T18:00:25.000Z"},"num_mflix_comments":0},{"_id":"573a1391f29313caabcd6f98","plot":"A romantic rivalry among members of a secret society becomes even tenser when one of the men is assigned to carry out an assassination.","genres":["Crime","Drama","Mystery"],"runtime":75,"rated":"PASSED","cast":["Lon Chaney","Leatrice Joy","John Bowers","Hardee Kirkland"],"num_mflix_comments":1,"poster":"https://m.media-amazon.com/images/M/MV5BMTkwOTUyNDk1N15BMl5BanBnXkFtZTYwODI3MzI3._V1_SY1000_SX677_AL_.jpg","title":"The Ace of Hearts","fullplot":"A secret society holds a meeting to determine what to do about a powerful and dangerous man whom they have been studying closely for the past three months. They all agree that he deserves to die. Two of the members, Farallone and Forrest, are both in love with Lilith, the group's only female member. But Lilith accepts neither of them, preferring to devote herself to the group's cause. When the group meets again and deals cards to all the members, Forrest draws the ace of hearts, meaning that he will be the one to carry out the assassination. Lilith then suddenly agrees to marry him, in order to give him courage. But after their first night together, both of them begin to feel differently about what they have planned.","countries":["USA"],"released":"1924-04-04T00:00:00.000Z","directors":["Wallace Worsley"],"writers":["Gouverneur Morris (by)","Ruth Wightman (scenario)"],"awards":{"wins":0,"nominations":2,"text":"2 nominations."},"lastupdated":"2015-07-20 00:01:29.560000000","year":1921,"imdb":{"rating":7,"votes":798,"id":11904},"type":"movie","tomatoes":{"viewer":{"rating":3.5,"numReviews":377,"meter":68},"lastUpdated":"2015-04-28T19:29:23.000Z"}},{"_id":"573a1391f29313caabcd70b4","plot":"An extended family split up in France and Germany find themselves on opposing sides of the battlefield during World War I.","genres":["Drama","Romance","War"],"runtime":150,"rated":"PASSED","cast":["Pomeroy Cannon","Josef Swickard","Bridgetta Clark","Rudolph Valentino"],"num_mflix_comments":1,"poster":"https://m.media-amazon.com/images/M/MV5BOTU1ODQyYTctODhkNy00YWRmLWE2YzYtMTQ5ZjA3OTNiN2QyXkEyXkFqcGdeQXVyMzE0MjY5ODA@._V1_SY1000_SX677_AL_.jpg","title":"The Four Horsemen of the Apocalypse","fullplot":"Julio Madariaga is the Argentine patriarch of a wealthy family. He has two daughters, the elder wed to a Frenchman and the other to a German. He prefers the Frenchman and his family, especially his grandson Julio, causing jealousy from the German and his three sons. When Madariaga dies, the family splits up, each son-in-law returning to his own country. The Frenchman and his own move to Paris, where Julio becomes an artist and has an affair with an unhappily married woman, the lovely Marguerite Laurier. Her husband finds out, but before he can finalize a divorce, World War One rears its head and both sides of the family will endure great suffering in the conflict, especially since they must fight one another on the battlefield.","countries":["USA"],"released":"1923-03-31T00:00:00.000Z","directors":["Rex Ingram"],"writers":["Vicente Blasco Ibèèez (novel)","June Mathis (written for the screen by)"],"awards":{"wins":1,"nominations":0,"text":"1 win."},"lastupdated":"2015-08-24 00:59:30.430000000","year":1921,"imdb":{"rating":7.9,"votes":2475,"id":12190},"type":"movie","tomatoes":{"viewer":{"rating":3.9,"numReviews":507,"meter":76},"production":"Metro Pictures Corporation","lastUpdated":"2015-07-28T18:34:16.000Z"}}]
+
+     
+ 
+    ]
+    
+  </script>
+</body>
+
+</html>
