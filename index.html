@@ -112,12 +112,12 @@ function runColorsTests() {
                   "Content-Type": "application/json",
                   // 'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({"color": "Hayes1"})
+                body: JSON.stringify({"color": "Hayes"})
               })
         .then(response => response.json())
         .then(data => {
             let oneColorId = data["insertedId"];
-            console.log("added color Hayes1",oneColorId)
+            console.log("added color Hayes",oneColorId)
             
             let div = document.createElement("div");
 
@@ -125,28 +125,7 @@ function runColorsTests() {
             results.appendChild(div);
             return oneColorId;
           })
-.then (() => {
-        url = domain + endpointPrefix + "colors";
-        fetch(url, 
-              {
-                method: "POST", // or 'PUT',
-                headers: {
-                  "Content-Type": "application/json",
-                  // 'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: JSON.stringify({"color": "Hayes2"})
-              })
-        .then(response => response.json())
-        .then(data => {
-            let oneColorId = data["insertedId"];
-            console.log("added color Hayes2",oneColorId)
-            
-            let div = document.createElement("div");
-
-            div.innerText = JSON.stringify(data);
-            results.appendChild(div);
-            return oneColorId;
-          })          
+          
         .then ((oneColorId) => {
         url = domain + endpointPrefix + "colors/" + oneColorId;
         console.log("deleting",oneColorId)
